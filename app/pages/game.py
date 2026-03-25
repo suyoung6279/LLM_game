@@ -22,6 +22,7 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Noto+Serif+KR:wght@400;700&display=swap');
 
+                        
 /* 전체 배경 */
 .stApp {
     background: #1a1610;
@@ -353,27 +354,31 @@ st.markdown("""
     transition: all 0.2s !important;
 }
 
-/* 버튼 본체 */
-.stButton button {
-    background-color: #c8a86b !important; /* 금색 배경 */
-    border: 1px solid #f0e4c8 !important;
+/* 버튼 본체 - 배경 검은색, 금색 테두리 */
+.stButton button {  
+    background-color: #1a1610 !important; 
+    border: 1px solid #c8a86b !important; 
     border-radius: 4px !important;
     height: 3rem !important;
     width: 100% !important;
 }
 
-/* 버튼 내부 글씨 - 아주 진한 검은색으로 강제 */
+/* 버튼 내부 글씨 - 밝은 금색 텍스트로 변경 */
 .stButton button p, .stButton button span {
-    color: #1a1610 !important; 
+    color: #c8a86b !important; 
     font-size: 1rem !important;
     font-weight: 900 !important;
     font-family: 'Do Hyeon', sans-serif !important;
 }
-            
-/* 버튼 호버(마우스 올렸을 때) 시 색상 */
+
+/* 버튼 호버(마우스 올렸을 때) - 배경 금색, 글씨 검은색으로 반전 효과 */
 .stButton button:hover {
-    background: #ffffff !important; /* 호버 시 버튼을 하얗게 */
-    color: #000000 !important;
+    background-color: #c8a86b !important; 
+    border-color: #f0e4c8 !important;
+    color: #1a1610 !important;
+}
+.stButton button:hover p, .stButton button:hover span {
+    color: #1a1610 !important; 
 }
 
 /* 사이드바 전체 배경 */
@@ -808,17 +813,52 @@ with right_col:
         st.markdown('<div class="radio-booth">', unsafe_allow_html=True)
         st.markdown('<div class="booth-label">BBC 라디오 — 방송 송출</div>', unsafe_allow_html=True)
 
-        with st.form("broadcast_form", clear_on_submit=True):
-            user_input = st.text_input(
-                "",
-                placeholder=f"Stage {st.session_state.stage} 방송 메세지를 입력하세요...",
-                label_visibility="collapsed"
+        from streamlit_mic_recorder import speech_to_text
+
+        # 1. 텍스트 임시 저장소 초기화 (에러 방지용)
+        if "current_text" not in st.session_state:
+            st.session_state.current_text = ""
+        if "last_audio" not in st.session_state:
+            st.session_state.last_audio = ""
+
+        # 2. key 속성을 완전히 지우고, value 속성으로 세션 상태와 연결합니다.
+        user_input = st.text_input(
+            "",
+            value=st.session_state.current_text,
+            placeholder=f"Stage {st.session_state.stage} 방송 메세지를 입력하세요...",
+            label_visibility="collapsed"
+        )
+        
+        # 버튼들을 1:1 비율로 나란히 배치하기 위해 컬럼 2개로 분할
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # 마이크 버튼
+            text_from_audio = speech_to_text(
+                language='ko-KR',
+                start_prompt="🎙️ 음성 녹음",
+                stop_prompt="🔴 녹음 중...",
+                just_once=True,
+                key='stt',
+                use_container_width=True
             )
-            submitted = st.form_submit_button("📡 송출")
+            
+        with col2:
+            submitted = st.button("📡 송출", use_container_width=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # 3. 마이크에서 '새로운' 음성 텍스트가 들어오면?
+        if text_from_audio and text_from_audio != st.session_state.last_audio:
+            st.session_state.last_audio = text_from_audio  # 무한 새로고침 방지
+            st.session_state.current_text = text_from_audio # 입력창에 띄울 텍스트 업데이트
+            st.rerun() # 화면을 즉시 새로고침해서 텍스트창에 반영!
+
         if submitted and user_input.strip():
+            # 전송을 누르면 다음 작전을 위해 임시 저장소들을 깨끗하게 비워줍니다.
+            st.session_state.current_text = ""
+            st.session_state.last_audio = ""
+            
             with st.spinner("통신 처리 중..."):
                 try:
                     llm, get_live_weather, get_moon_phase, embedding_model, vector_store = init_llm()
