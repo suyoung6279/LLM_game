@@ -1,7 +1,7 @@
 import streamlit as st
 
 # 1. 페이지 설정
-st.set_page_config(page_title="Metaphor for Peace", layout="wide")
+st.set_page_config(page_title="Metaphor for world", layout="wide")
 
 # 2. 사용자 지정 CSS 적용 (제공해주신 스타일)
 st.markdown("""
@@ -111,7 +111,7 @@ section[data-testid="stSidebar"] a:hover {
 st.markdown('<div class="main-bg"></div>', unsafe_allow_html=True)
 
 # 3. 게임 메인 타이틀
-st.title("🎙️ 작전명 : Metaphor for Peace")
+st.title("🎙️ 작전명 : Metaphor for World")
 st.markdown("---")
 
 # 4. 게임 배경 설명
@@ -160,11 +160,11 @@ st.markdown("---")
 
 # 6. 게임 규칙 (생존 가이드)
 st.header("⚠️ 작전 수칙 (생존 가이드)")
-st.markdown('<div class="white-warning">당신의 모든 방송은 독일군에게 실시간으로 감청되고 있습니다. 직설적인 화법은 죽음을, 너무 난해한 화법은 동료들의 죽음을 부릅니다.</div>', unsafe_allow_html=True)
+st.markdown('<div class="white-warning"> ⚠️당신의 모든 방송은 독일군에게 실시간으로 감청되고 있습니다. 직설적인 화법은 죽음을 부릅니다.</div>', unsafe_allow_html=True)
 
 st.markdown("""
 * **🚨 직설적인 발언 (게임 오버):** 전쟁 계획이나 지명을 노골적으로 언급하면, 독일군이 눈치를 채고 방송국을 급습하여 당신을 체포할 것입니다.
 * **❓ 과도한 비유 (게임 오버):** 비유가 너무 난해하여 미군이 알아듣지 못하면, 원래 계획이 강행되어 연합군이 전멸하고 당신은 통신 장교에서 해임됩니다.
 * **🎯 승리 조건:** 비유적인 표현(Metaphor)을 사용하여 독일군을 속이면서도, 미군 지휘관이 정확히 작전을 바꿀 수 있도록 절묘한 줄타기를 해야 합니다.
-* **❓ tip : 'weather' 부분에서 날씨와 달의 상황을 보고 비유하여 독일군을 속이세요. 물론 실제와 다르다면, 큰 후폭풍이 찾아올 수 있습니다. 
+* **❓ tip :** 'weather' 부분에서 날씨와 달의 상황을 보고 비유하여 독일군을 속이세요. 물론 실제와 다르다면, 큰 후폭풍이 찾아올 수 있습니다. 
 """)

@@ -15,13 +15,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+import base64
+
+def add_bgm(file_path):
+    with open(file_path, "rb") as f:
+        data = f.read()
+        b64 = base64.b64encode(data).decode()
+        md = f"""
+            <audio autoplay loop>
+                <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            """
+        st.markdown(md, unsafe_allow_html=True)
+
+try:
+    add_bgm("assets/Eleven_Minutes_North.mp3") 
+except:
+    pass
+
 # ──────────────────────────────────────────
 # CSS 스타일
 # ──────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Noto+Serif+KR:wght@400;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Special+Elite&family=Noto+Serif+KR:wght@400;700&display=swap');
                         
 /* 전체 배경 */
 .stApp {
@@ -114,14 +132,14 @@ st.markdown("""
 }
 
 .stage-title {
-    font-family: 'Noto Serif KR', serif;
+    font-family: 'Do Hyeon', sans-serif;
     font-size: 1.1rem;
     color: #f2c870;
     font-weight: 700;
 }
 
 .stage-desc {
-    font-family: 'Noto Serif KR', serif;
+    font-family: 'Do Hyeon', sans-serif;
     font-size: 0.82rem;
     color: #c8aa78;
     margin-top: 0.4rem;
@@ -743,191 +761,124 @@ with right_col:
     except:
         pass
 
-    # 게임오버 / 승리 배너
-    if st.session_state.game_over:
-        st.markdown("""
-        <div class="banner-gameover">
-            <div style="font-size:2rem;color:#c0392b;margin-bottom:0.5rem;">🚨 CAPTURED</div>
-            <div style="font-size:1rem;color:#8b1a1a;">독일군에게 발각되었습니다.</div>
-            <div style="font-size:0.8rem;color:#5a2020;margin-top:0.5rem;">당신은 체포되었습니다.</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("다시 시작"):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.rerun()
+# ── 오른쪽: 결과 및 대화창 ──
+    # 1. 게임 종료 상태(승리/패배) 판단 및 배너 출력
+    if st.session_state.game_over or st.session_state.victory:
+        if st.session_state.victory:
+            # [승리 배너]
+            st.markdown("""
+            <div class="banner-victory">
+                <div style="font-size:2.5rem;color:#5dc45d;margin-bottom:0.5rem;font-weight:900;">🎖️ MISSION ACCOMPLISHED</div>
+                <div style="font-size:1.2rem;color:#f0e4c8;">작전 성공: 연합군이 무사히 작전을 마쳤습니다.</div>
+                <div style="font-size:0.9rem;color:#2d6a2d;margin-top:0.5rem;">당신의 헌신적인 무전이 역사를 바꿨습니다.</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        elif st.session_state.suspicion >= 100:
+            # [체포 배너]
+            st.markdown("""
+            <div class="banner-gameover" style="border-color: #c0392b;">
+                <div style="font-size:2.5rem;color:#c0392b;margin-bottom:0.5rem;font-weight:900;">🚨 CAPTURED</div>
+                <div style="font-size:1.1rem;color:#f0e4c8;">게슈타포가 위치를 알아냈습니다.</div>
+                <div style="font-size:0.8rem;color:#8b1a1a;margin-top:0.5rem;">당신은 체포되었고, 첩보망은 붕괴되었습니다.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        elif st.session_state.casualty >= 1000:
+            # [사상자 초과 배너]
+            st.markdown("""
+            <div class="banner-gameover" style="border-color: #4a4a4a; background: rgba(20, 20, 20, 0.95);">
+                <div style="font-size:2.5rem;color:#7f8c8d;margin-bottom:0.5rem;font-weight:900;">⚰️ MISSION FAILED</div>
+                <div style="font-size:1.1rem;color:#ecf0f1;">연합군이 전멸했습니다.</div>
+                <div style="font-size:0.8rem;color:#bdc3c7;margin-top:0.5rem;">
+                    누적 사상자: """ + f"{st.session_state.casualty:,}" + """명<br>
+                    당신의 무능함이 수많은 전우를 죽음으로 몰아넣었습니다.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-    elif st.session_state.victory:
-        st.markdown("""
-        <div class="banner-victory">
-            <div style="font-size:2rem;color:#5dc45d;margin-bottom:0.5rem;">🎉 VICTORY</div>
-            <div style="font-size:1rem;color:#2d8c2d;">역사를 바꿨습니다.</div>
-            <div style="font-size:0.8rem;color:#1a5a1a;margin-top:0.5rem;">연합군이 승리합니다.</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("다시 시작"):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.rerun()
+        st.markdown('<div style="text-align:center; margin: 2rem 0; font-family:\'Do Hyeon\'; color:#c8a86b;">📜 최종 작전 교신 기록</div>', unsafe_allow_html=True)
 
-    else:
-        # 대화 기록 출력
-        chat_container = st.container()
-        with chat_container:
-            for msg in st.session_state.history:
-                if msg["role"] == "player":
-                    st.markdown(f"""
-                    <div class="msg-wrap">
-                        <div class="msg-label-player">📻 RADIO BROADCAST</div>
-                        <div class="msg-player">{msg["text"]}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+    # 2. 대화 기록 출력 (게임 중이든 종료 후든 항상 표시)
+    chat_container = st.container()
+    with chat_container:
+        for msg in st.session_state.history:
+            if msg["role"] == "player":
+                st.markdown(f'<div class="msg-wrap"><div class="msg-label-player">📻 RADIO BROADCAST</div><div class="msg-player">{msg["text"]}</div></div>', unsafe_allow_html=True)
+            elif msg["role"] == "german":
+                badge = '<span class="badge-danger">⚠ 발각 위험</span>' if msg["badge"] == "발각 위험" else '<span class="badge-safe">✓ 안전</span>'
+                st.markdown(f'<div class="msg-wrap"><div class="msg-label-german">🎖 독일군 검열국</div><div class="msg-german">{badge}<div class="reason-text">{msg["text"]}</div></div></div>', unsafe_allow_html=True)
+            elif msg["role"] == "usa":
+                st.markdown(f'<div class="msg-wrap"><div class="msg-label-usa">★ 미 8공군 해독반</div><div class="msg-usa">{msg["text"]}<div style="font-size:0.72rem;color:#1e4a8c;margin-top:0.4rem;font-family:\'Special Elite\',cursive;">해독 점수: {msg.get("score", 0):.0f} / 100</div></div></div>', unsafe_allow_html=True)
 
-                elif msg["role"] == "german":
-                    badge = '<span class="badge-danger">⚠ 발각 위험</span>' if msg["badge"] == "발각 위험" else '<span class="badge-safe">✓ 안전</span>'
-                    st.markdown(f"""
-                    <div class="msg-wrap">
-                        <div class="msg-label-german">🎖 독일군 검열국</div>
-                        <div class="msg-german">
-                            {badge}
-                            <div class="reason-text">{msg["text"]}</div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                elif msg["role"] == "usa":
-                    st.markdown(f"""
-                    <div class="msg-wrap">
-                        <div class="msg-label-usa">★ 미 8공군 해독반</div>
-                        <div class="msg-usa">{msg["text"]}
-                            <div style="font-size:0.72rem;color:#1e4a8c;margin-top:0.4rem;font-family:'Special Elite',cursive;">
-                                해독 점수: {msg.get('score', 0):.0f} / 100
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
+    # 3. 입력창 또는 리셋 버튼 제어
+    if st.session_state.game_over or st.session_state.victory:
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
-
-        # 입력창
+        if st.button("📻 재방송 (다시 시작)", use_container_width=True):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+    else:
+        # 게임이 진행 중일 때만 입력창 표시
+        st.markdown('<hr class="divider">', unsafe_allow_html=True)
         st.markdown('<div class="radio-booth">', unsafe_allow_html=True)
         st.markdown('<div class="booth-label">BBC 라디오 — 방송 송출</div>', unsafe_allow_html=True)
 
         from streamlit_mic_recorder import speech_to_text
+        if "current_text" not in st.session_state: st.session_state.current_text = ""
+        if "last_audio" not in st.session_state: st.session_state.last_audio = ""
 
-        # 1. 텍스트 임시 저장소 초기화 (에러 방지용)
-        if "current_text" not in st.session_state:
-            st.session_state.current_text = ""
-        if "last_audio" not in st.session_state:
-            st.session_state.last_audio = ""
-
-        # 2. key 속성을 완전히 지우고, value 속성으로 세션 상태와 연결합니다.
-        user_input = st.text_input(
-            "",
-            value=st.session_state.current_text,
-            placeholder=f"Stage {st.session_state.stage} 방송 메세지를 입력하세요...",
-            label_visibility="collapsed"
-        )
-        
-        # 버튼들을 1:1 비율로 나란히 배치하기 위해 컬럼 2개로 분할
+        user_input = st.text_input("", value=st.session_state.current_text, placeholder=f"Stage {st.session_state.stage} 방송 메세지를 입력하세요...", label_visibility="collapsed")
         col1, col2 = st.columns(2)
-        
         with col1:
-            # 마이크 버튼
-            text_from_audio = speech_to_text(
-                language='ko-KR',
-                start_prompt="🎙️ 음성 녹음",
-                stop_prompt="🔴 녹음 중...",
-                just_once=True,
-                key='stt',
-                use_container_width=True
-            )
-            
+            text_from_audio = speech_to_text(language='ko-KR', start_prompt="🎙️ 음성 녹음", stop_prompt="🔴 녹음 중...", just_once=True, key='stt', use_container_width=True)
         with col2:
             submitted = st.button("📡 송출", use_container_width=True)
-
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 3. 마이크에서 '새로운' 음성 텍스트가 들어오면?
+        # 마이크 및 송출 로직 (기존과 동일)
         if text_from_audio and text_from_audio != st.session_state.last_audio:
-            st.session_state.last_audio = text_from_audio  # 무한 새로고침 방지
-            st.session_state.current_text = text_from_audio # 입력창에 띄울 텍스트 업데이트
-            st.rerun() # 화면을 즉시 새로고침해서 텍스트창에 반영!
+            st.session_state.last_audio = text_from_audio
+            st.session_state.current_text = text_from_audio
+            st.rerun()
 
         if submitted and user_input.strip():
-            # 전송을 누르면 다음 작전을 위해 임시 저장소들을 깨끗하게 비워줍니다.
             st.session_state.current_text = ""
             st.session_state.last_audio = ""
-            
             with st.spinner("통신 처리 중..."):
                 try:
                     llm, get_live_weather, get_moon_phase, embedding_model, vector_store = init_llm()
                     current_stage = st.session_state.stage
+                    st.session_state.history.append({"role": "player", "text": user_input})
+                    
+                    status, reason, sus_score = check_suspects(user_input, current_stage, llm, get_live_weather, get_moon_phase, embedding_model, vector_store)
+                    st.session_state.history.append({"role": "german", "badge": status, "text": reason})
+                    
+                    if sus_score >= 0.8: st.session_state.suspicion += 25 * current_stage
+                    elif sus_score >= 0.5: st.session_state.suspicion += 15 * current_stage
+                    elif sus_score >= 0.3: st.session_state.suspicion += 5 * current_stage
 
-                    # 플레이어 메세지 기록
-                    st.session_state.history.append({
-                        "role": "player",
-                        "text": user_input
-                    })
-
-                    # 독일군 검열
-                    status, reason, sus_score = check_suspects(
-                        user_input, current_stage,
-                        llm, get_live_weather, get_moon_phase,
-                        embedding_model, vector_store
-                    )
-
-                    st.session_state.history.append({
-                        "role": "german",
-                        "badge": status,
-                        "text": reason
-                    })
-
-                    # 의심도 누적
-                    if sus_score >= 0.8:
-                        st.session_state.suspicion += 25 * current_stage
-                    elif sus_score >= 0.5:
-                        st.session_state.suspicion += 15 * current_stage
-                    elif sus_score >= 0.3:
-                        st.session_state.suspicion += 5 * current_stage
-
-                    # 게임오버 체크
                     if st.session_state.suspicion >= 100:
                         st.session_state.game_over = True
                         st.rerun()
 
-                    # 미군 해독
                     usa_msg, dc_score = us_decode(user_input, current_stage, llm)
-                    st.session_state.history.append({
-                        "role": "usa",
-                        "text": usa_msg,
-                        "score": dc_score
-                    })
+                    st.session_state.history.append({"role": "usa", "text": usa_msg, "score": dc_score})
 
-                    # 사상자 계산
-                    if dc_score >= 80:
-                        current_casualties = 0
-                    elif dc_score >= 50:
-                        current_casualties = 50 * current_stage
-                    elif dc_score >= 30:
-                        current_casualties = 150 * current_stage
-                    else:
-                        current_casualties = 300 * current_stage
-
+                    if dc_score >= 80: current_casualties = 0
+                    elif dc_score >= 50: current_casualties = 50 * current_stage
+                    elif dc_score >= 30: current_casualties = 150 * current_stage
+                    else: current_casualties = 300 * current_stage
                     st.session_state.casualty += current_casualties
 
-                    # 사상자 초과 체크
                     if st.session_state.casualty >= 1000:
                         st.session_state.game_over = True
                         st.rerun()
 
-                    # 스테이지 진행
                     if current_stage < 3:
                         st.session_state.stage += 1
                     else:
                         st.session_state.victory = True
-
                     st.rerun()
-
                 except Exception as e:
                     st.error(f"오류: {e}")
