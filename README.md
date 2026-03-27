@@ -57,6 +57,17 @@
   <img src="assets/스크린샷 2026-03-27 164856.png" alt="게임 구동 화면" width="800">
   
   <em>[기상상황 확인 맵]</em>
+
+   
+
+  <img src="assets/승리.png" alt="게임 구동 화면" width="800">
+
+   <em>[게임 승리 시 화면]</em>
+   
+   <img src="assets/패배.png" alt="게임 구동 화면" width="800">
+  
+  <em>[게임 패배 시 화면]</em>
+  
 </p>
 
 ---
